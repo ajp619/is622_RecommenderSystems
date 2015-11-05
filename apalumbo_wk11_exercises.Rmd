@@ -3,6 +3,7 @@ title: "Wk 11 Exercises"
 author: "Aaron Palumbo"
 date: "November 3, 2015"
 output: pdf_document
+toc: true
 ---
 
 ## 9.3.1 (section 9.3.4)
@@ -22,21 +23,17 @@ C & 2   &     & 1   & 3   &     & 4   & 5   & 3
 Figure 9.8 is a utility matrix, representing the ratings, on a 1-5 star scale, of eight items, $a$ through $h$, by three users $A$, $B$, and $C$. Compute the following from the data of this matrix.
 
 ```{r}
-
 # ############## #
 # Utility Matrix #
 # ############## #
-
-df <- data.frame(
-  a = c(4, NA, 2),
-  b = c(5, 3, NA),
-  c = c(NA, 4, 1),
-  d = c(5, 3, 3),
-  e = c(1, 1, NA),
-  f = c(NA, 2, 4),
-  g = c(3, 1, 5),
-  h = c(2, NA, 3)
-)
+df <- data.frame(a = c(4, NA, 2),
+                 b = c(5, 3, NA),
+                 c = c(NA, 4, 1),
+                 d = c(5, 3, 3),
+                 e = c(1, 1, NA),
+                 f = c(NA, 2, 4),
+                 g = c(3, 1, 5),
+                 h = c(2, NA, 3))
 
 rownames(df) <- c("A", "B", "C")
 cn <- colnames(df)
@@ -44,11 +41,11 @@ cn <- colnames(df)
 # ################# #
 # User Combinations #
 # ################# #
-
 user.pairs <- as.data.frame(t(combn(rownames(df), 2)))
 colnames(user.pairs) <- c("User1", "User2")
 ```
 
+\pagebreak
 
 ### 9.3.1 (a)
 Treating the utility matrix as boolean, compute the Jaccard distance between each pair of users.
@@ -76,9 +73,10 @@ jd["Jaccard.Distance"] <-
 })
 
 # Format output
-knitr::kable(jd)
+knitr::kable(jd, digits=2)
 ```
 
+\pagebreak
 
 ### 9.3.1 (b)
 Repeat part (a), but use the cosine distance.
@@ -105,50 +103,84 @@ cd["Cosine.Distance"] <-
 })
 
 # Format output
-knitr::kable(cd)
+knitr::kable(cd, digits=2)
 
 ```
 
+\pagebreak
 
 ### 9.3.1 (c)
 Treat ratings of 3, 4, and 5 as 1 and 1, 2, and blank as 0. Compute the Jaccard Distance between each pair of users.
 
 ```{r}
-# ################ #
-# Jaccard Distance #
-# ################ #
-
-# Distance function
-jaccard.dist <- function(v1, v2) {
-  length(intersect(v1, v2)) / length(union(v1, v2))
-}
-
-# Return boolean to determine set membership
-inset <- function(j) {!is.na(j) & as.logical(j)}
+# Transform Data
+binrating <- function(i) {ifelse(i %in% c(3, 4, 5), TRUE, FALSE)}
 
 # Apply distance function
-jd <- user.pairs
-jd["Jaccard.Distance"] <- 
+jd.c <- user.pairs
+jd.c["Jaccard.Distance"] <- 
   apply(user.pairs, 1, function(i) {
-    s1 <- cn[sapply(df[i[1], ], inset)]
-    s2 <- cn[sapply(df[i[2], ], inset)] 
+    s1 <- cn[sapply(df[i[1], ], binrating)]
+    s2 <- cn[sapply(df[i[2], ], binrating)] 
     jaccard.dist(s1, s2)
 })
 
 # Format output
-knitr::kable(jd)
+knitr::kable(jd.c, digits=2)
+
 ```
 
 
 ### 9.3.1 (d)
 Repeat Part (c), but use the cosine distance.
 
+```{r}
+# Apply distance function
+cd.d <- user.pairs
+cd.d["Cosine.Distance"] <-
+  apply(user.pairs, 1, function(i) {
+    v1 <- binrating(df[i[1], ])
+    v2 <- binrating(df[i[2], ])
+    cosine.dist(v1, v2)
+  })
+
+# Format output
+knitr::kable(cd.d, digits=2)
+```
+
+\pagebreak
+
 ### 9.3.1 (e)
 Normalize the matrix by subtracting from each non blank entry the average value for its user.
 
+```{r}
+
+df.normalized <- t(apply(df, 1, function(i) {
+  i - mean(i, na.rm=TRUE)
+}))
+
+knitr::kable(df.normalized, digits=2)
+```
+
+
 ### 9.3.1 (f)
-Using the  normalize matrix from Part (e), compute the cosine distance between each pair of users.
+Using the  normalized matrix from Part (e), compute the cosine distance between each pair of users.
 
+```{r}
+df.normalized[is.na(df.normalized)] <- 0
 
+# Apply distance function
+cd.f <- user.pairs
+cd.f["Cosine.Distance"] <-
+  apply(user.pairs, 1, function(i) {
+    v1 <- df.normalized[i[1], ]
+    v2 <- df.normalized[i[2], ]
+    cosine.dist(v1, v2)
+  })
+
+# Format output
+knitr::kable(cd.f, digits=2)
+
+```
 
 
