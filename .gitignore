@@ -12,3 +12,9 @@
 vignettes/*.html
 vignettes/*.pdf
 .Rproj.user
+
+# data files
+data/
+
+# IPython Notebook
+.ipynb_checkpoints
